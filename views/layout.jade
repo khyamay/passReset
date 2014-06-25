@@ -29,9 +29,9 @@ html
                 a(href='/signup') Signup
 
     .container
-      if message.error
+      if messages.error
         .alert.alert-danger
-      if message.info
+      if messages.info
         .alert.alert-info
           div= messages.info
       if messages.success
