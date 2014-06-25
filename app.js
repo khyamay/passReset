@@ -19,7 +19,7 @@ var bcrypt = require('bcrypt-nodejs');
 var async = require('async');
 var crypto = require('crypto');
 
-passport.user(new LocalStrategy(function (username, password, done){
+passport.use(new LocalStrategy(function (username, password, done){
 	User.findOne({username: username}, function (err, user){
 		if (err) return done(err);
 		if (!user) return done(null, false, {message: "Incorrect username"});
@@ -97,9 +97,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //Routes
 app.get('/', function (req, res){
-	res.render('index', { title: 'Express'});
+	res.render('index', { 
+		title: 'Express',
+		user: req.user
+	});
 });
 
+app.get('/login', function (req, res){
+	res.render('login', {
+		user: req.user
+	});
+});
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
