@@ -29,4 +29,12 @@ html
                 a(href='/signup') Signup
 
     .container
+      if message.error
+        .alert.alert-danger
+      if message.info
+        .alert.alert-info
+          div= messages.info
+      if messages.success
+        .alert.alert-success
+          div= messages.success
       block content

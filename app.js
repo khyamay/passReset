@@ -18,6 +18,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var bcrypt = require('bcrypt-nodejs');
 var async = require('async');
 var crypto = require('crypto');
+var flash = require('express-flash');
 
 passport.use(new LocalStrategy(function (username, password, done){
 	User.findOne({username: username}, function (err, user){
@@ -90,6 +91,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 app.use(session({secret: 'session secret key'}));
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -147,6 +149,11 @@ app.get('/logout', function (req, res){
 	res.redirect('/');
 });
 
+app.get('/forgot', function (req, res){
+	res.render('forgot', {
+		user: req.user
+	});
+});
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
