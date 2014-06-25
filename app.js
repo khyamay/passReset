@@ -19,21 +19,29 @@ var bcrypt = require('bcrypt-nodejs');
 var async = require('async');
 var crypto = require('crypto');
 
-var app = express();
-mongoose.connect('localhost');
+passport.user(new LocalStrategy(function (username, password, done){
+	User.findOne({username: username}, function (err, user){
+		if (err) return done(err);
+		if (!user) return done(null, false, {message: "Incorrect username"});
+			user.comparePassword(password, function (err, isMatch){
+				if(isMatch){
+					return done(null, user);
+				} else {
+					return done(null, false, { message:"Incorrect password"});
+				}
+			});
+	});
+}));
 
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-app.use(favicon());
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded());
-app.use(cookieParser());
-app.use(session({secret: 'session secret key'}));
-app.use(express.static(path.join(__dirname, 'public')));
+passport.serializeUser(function (user, done){
+	done(null, user.id);
+});
 
+passport.deserializeUser(function (id, done){
+	User,findById(id, function (err, user){
+		done(err, user);
+	});
+});
 
 var userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -66,12 +74,28 @@ userSchema.methods.comparePassword = function (candidatePassword, cb){
 			if (err) return cb(err);
 			cb(null, isMatch);
 	});
-}
+};
 
 
+var app = express();
+mongoose.connect('localhost');
+
+// all Middleware
+app.set('port', process.env.PORT || 3000);
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+app.use(favicon());
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
+app.use(cookieParser());
+app.use(session({secret: 'session secret key'}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(express.static(path.join(__dirname, 'public')));
 
 
-
+//Routes
 app.get('/', function (req, res){
 	res.render('index', { title: 'Express'});
 });
