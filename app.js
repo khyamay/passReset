@@ -38,7 +38,7 @@ passport.serializeUser(function (user, done){
 });
 
 passport.deserializeUser(function (id, done){
-	User,findById(id, function (err, user){
+	User.findById(id, function (err, user){
 		done(err, user);
 	});
 });
@@ -51,7 +51,6 @@ var userSchema = new mongoose.Schema({
   resetPasswordExpires: Date
 });
 
-var User = mongoose.model('User', userSchema);
 userSchema.pre('save', function (next){
 	var user = this;
 	var SALT_FACTOR = 5;
@@ -75,6 +74,7 @@ userSchema.methods.comparePassword = function (candidatePassword, cb){
 			cb(null, isMatch);
 	});
 };
+var User = mongoose.model('User', userSchema);
 
 
 var app = express();
@@ -108,6 +108,45 @@ app.get('/login', function (req, res){
 		user: req.user
 	});
 });
+
+app.post('/login', function (req, res, next){
+	passport.authenticate('local', function (err, user, info){
+		if (err) return next (err)
+			if (!user) {
+				return res.redirect('/login')
+			}
+			req.logIn(user, function (err){
+				if (err) return next(err);
+				return res.redirect('/');
+			});
+	})(req, res, next);
+});
+
+app.get('/signup', function (req, res){
+	res.render('signup', {
+		user: req.user
+	});
+});
+
+app.post('/signup', function (req, res){
+	var user = new User({
+		username: req.body.username,
+		email: req.body.email,
+		password: req.body.password
+	});
+
+	user.save(function (err){
+		req.logIn(user, function(err){
+			res.redirect('/');
+		});
+	});
+});
+
+app.get('/logout', function (req, res){
+	req.logout();
+	res.redirect('/');
+});
+
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
